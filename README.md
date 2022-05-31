@@ -11,7 +11,7 @@
 **RMB ->** Remove a particle  
 **R ->** Reset the grid  
 **Q/Escape ->** Quit  
-##Compiling
+## Compiling
 **Clone the repo:**
 `git clone https://github.com/Blayung/ca-physics.git`
 `cd ca-physics`
