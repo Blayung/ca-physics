@@ -60,6 +60,10 @@ int main(int argv, char* args[]){
     SDL_FillRect(uiSelectionImage,NULL,SDL_MapRGB(screen->format,255,255,255));
     uiSelectionRect.y=715;
 
+    bool isLeftMouseButtonDown=false;
+    bool isRightMouseButtonDown=false;
+    int mouseX, mouseY;
+
     Uint32 frameStartTick;
     SDL_Event event;
     bool running=true;
@@ -83,13 +87,19 @@ int main(int argv, char* args[]){
                     if(particlePlacingId==-1) particlePlacingId=7;
                 }
             }
-            else if(event.type==SDL_MOUSEBUTTONDOWN && event.button.y<640){
-                if(event.button.button==SDL_BUTTON_LEFT){
-                    grid[event.button.x/10][event.button.y/10].type=particlePlacingId;
-                }else if(event.button.button==SDL_BUTTON_RIGHT){
-                    grid[event.button.x/10][event.button.y/10].type=10;
-                }
-            }else if(event.type==SDL_KEYDOWN){
+            else if(event.type==SDL_MOUSEBUTTONDOWN){
+                if(event.button.button==SDL_BUTTON_LEFT)
+                isLeftMouseButtonDown=true;
+                else if(event.button.button==SDL_BUTTON_RIGHT)
+                isRightMouseButtonDown=true;
+            }
+            else if(event.type==SDL_MOUSEBUTTONUP){
+                if(event.button.button==SDL_BUTTON_LEFT)
+                isLeftMouseButtonDown=false;
+                else if(event.button.button==SDL_BUTTON_RIGHT)
+                isRightMouseButtonDown=false;
+            }
+            else if(event.type==SDL_KEYDOWN){
                 if(event.key.keysym.sym==SDLK_r){
                     for(int i=0;i<64;i++){
                         for(int j=0;j<64;j++){
@@ -102,6 +112,15 @@ int main(int argv, char* args[]){
                     break;
                 }
             }
+        }
+
+        //Mouse events
+        SDL_PumpEvents();
+        SDL_GetMouseState(&mouseX,&mouseY);
+        if(isLeftMouseButtonDown&&mouseY<640&&mouseY>0&&mouseX<640&&mouseX>0){
+            grid[mouseX/10][mouseY/10].type=particlePlacingId;
+        }else if(isRightMouseButtonDown&&mouseY<640&&mouseY>0&&mouseX<640&&mouseX>0){
+            grid[mouseX/10][mouseY/10].type=10;
         }
     
         //Every-frame stuff
