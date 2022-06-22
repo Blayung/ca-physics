@@ -135,16 +135,16 @@ int main(int argv, char* args[]){
         for(int i=0;i<64;i++){
             for(int j=0;j<64;j++){
                 //Fire disappearing
-                if(grid[i][j].type==6&&(rand() % 101==0||grid[i][j-1].type!=10)){
+                if(grid[i][j].type==6&&(rand() % 101==0||(grid[i][j-1].type!=10&&j>0))){
                     grid[i][j].type=9;
-                    if(grid[i][j-1].type==10){
+                    if(grid[i][j-1].type==10&&j>0){
                         grid[i][j-1].type=9;
                     }                    
                 }
 
                 //Fire spreading and water evaporation
                 if(grid[i][j].type==6||grid[i][j].type==7){
-                    if(rand()%101<4&&(grid[i+1][j].type==1||grid[i+1][j].type==3||grid[i+1][j].type==5||grid[i+1][j].type==2)){
+                    if(rand()%101<4&&i<63&&(grid[i+1][j].type==1||grid[i+1][j].type==3||grid[i+1][j].type==5||grid[i+1][j].type==2)){
                         if(grid[i+1][j].type==2){
                             grid[i+1][j].type=8;
                             if(grid[i][j].type==7)
@@ -153,7 +153,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j].type=6;
                     }
-                    if(rand()%101<4&&(grid[i-1][j].type==1||grid[i-1][j].type==3||grid[i-1][j].type==5||grid[i-1][j].type==2)){
+                    if(rand()%101<4&&i>0&&(grid[i-1][j].type==1||grid[i-1][j].type==3||grid[i-1][j].type==5||grid[i-1][j].type==2)){
                         if(grid[i-1][j].type==2){
                             grid[i-1][j].type=8;
                             if(grid[i][j].type==7)
@@ -162,7 +162,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j].type=6;
                     }
-                    if(rand()%101<4&&(grid[i+1][j+1].type==1||grid[i+1][j+1].type==3||grid[i+1][j+1].type==5||grid[i+1][j+1].type==2)){
+                    if(rand()%101<4&&i<63&&j<63&&(grid[i+1][j+1].type==1||grid[i+1][j+1].type==3||grid[i+1][j+1].type==5||grid[i+1][j+1].type==2)){
                         if(grid[i+1][j+1].type==2){
                             grid[i+1][j+1].type=8;
                             if(grid[i][j].type==7)
@@ -171,7 +171,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j+1].type=6;
                     }
-                    if(rand()%101<4&&(grid[i-1][j+1].type==1||grid[i-1][j+1].type==3||grid[i-1][j+1].type==5||grid[i-1][j+1].type==2)){
+                    if(rand()%101<4&&i>0&&j<63&&(grid[i-1][j+1].type==1||grid[i-1][j+1].type==3||grid[i-1][j+1].type==5||grid[i-1][j+1].type==2)){
                         if(grid[i-1][j+1].type==2){
                             grid[i-1][j+1].type=8;
                             if(grid[i][j].type==7)
@@ -180,7 +180,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j+1].type=6;
                     }
-                    if(rand()%101<4&&(grid[i-1][j-1].type==1||grid[i-1][j-1].type==3||grid[i-1][j-1].type==5||grid[i-1][j-1].type==2)){
+                    if(rand()%101<4&&i>0&&j>0&&(grid[i-1][j-1].type==1||grid[i-1][j-1].type==3||grid[i-1][j-1].type==5||grid[i-1][j-1].type==2)){
                         if(grid[i-1][j-1].type==2){
                             grid[i-1][j-1].type=8;
                             if(grid[i][j].type==7)
@@ -189,7 +189,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j-1].type=6;
                     }
-                    if(rand()%101<4&&(grid[i+1][j-1].type==1||grid[i+1][j-1].type==3||grid[i+1][j-1].type==5||grid[i+1][j-1].type==2)){
+                    if(rand()%101<4&&i<63&&j>0&&(grid[i+1][j-1].type==1||grid[i+1][j-1].type==3||grid[i+1][j-1].type==5||grid[i+1][j-1].type==2)){
                         if(grid[i+1][j-1].type==2){
                             grid[i+1][j-1].type=8;
                             if(grid[i][j].type==7)
@@ -198,14 +198,14 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j-1].type=6;
                     }
-                    if(rand()%101<4&&(grid[i][j+1].type==1||grid[i][j+1].type==3||grid[i][j+1].type==5||grid[i][j+1].type==2)){
+                    if(rand()%101<4&&j<63&&(grid[i][j+1].type==1||grid[i][j+1].type==3||grid[i][j+1].type==5||grid[i][j+1].type==2)){
                         if(grid[i][j+1].type==2){
                             grid[i][j+1].type=8;
                         }
                         else
                         grid[i][j+1].type=6;
                     }
-                    if(rand()%101<4&&(grid[i][j-1].type==1||grid[i][j-1].type==3||grid[i][j-1].type==5||grid[i][j-1].type==2)){
+                    if(rand()%101<4&&j>0&&(grid[i][j-1].type==1||grid[i][j-1].type==3||grid[i][j-1].type==5||grid[i][j-1].type==2)){
                         if(grid[i][j-1].type==2){
                             grid[i][j-1].type=8;
                         }
