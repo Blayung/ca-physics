@@ -1,3 +1,4 @@
+# Cellular Automaton Physics Project
 ## Features
 * Simple 2d physics
     * Fire spreading physics
