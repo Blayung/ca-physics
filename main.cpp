@@ -6,7 +6,7 @@
 
 struct Particle{
     bool toMove;
-    int type; // 0->air, 1->stone, 2->wood, 3->water, 4->oil, 5->sand, 6->gunpowder, 7->fire, 8->lava, 9->steam, 10->smoke
+    int type; // 0->air, 1->stone, 2->wood, 3->water, 4->oil, 5->sand, 6->gunpowder, 7->fire, 8->lava, 9->steam, 10->smoke, 11->flammable gas
     SDL_Surface *image;
     SDL_Rect rect;
 };
@@ -32,7 +32,7 @@ int main(int argv, char* args[]){
 
     // Pre-loop stuff
     //
-    // 0->air, 1->stone, 2->wood, 3->water, 4->oil, 5->sand, 6->gunpowder, 7->fire, 8->lava, 9->steam, 10->smoke
+    // 0->air, 1->stone, 2->wood, 3->water, 4->oil, 5->sand, 6->gunpowder, 7->fire, 8->lava, 9->steam, 10->smoke, 11->flammable gas
     const int AIR=0;
     const int STONE=1;
     const int WOOD=2;
@@ -44,17 +44,18 @@ int main(int argv, char* args[]){
     const int LAVA=8;
     const int STEAM=9;
     const int SMOKE=10;
+    const int FLAMMABLE_GAS=11;
 
     const int SOLIDS[2]={1,2};
     const int POWDERS[2]={5,6};
     const int FLUIDS[3]={3,4,8};
-    const int GASES[2]={9,10};
+    const int GASES[3]={9,10,11};
 
     const int STARTING_FIRE[2]={7,8};
-    const int FLAMMABLE[3]={2,4,6};
-    const int CAN_GO_THROUGH[3]={0,9,10};
+    const int FLAMMABLE[4]={2,4,6,11};
+    const int CAN_GO_THROUGH[4]={0,9,10,11};
 
-    const int PARTICLE_COLORS[11][3]={
+    const int PARTICLE_COLORS[12][3]={
         {0,0,0}, //air
         {97,92,88}, //stone
         {168,126,41}, //wood
@@ -65,7 +66,8 @@ int main(int argv, char* args[]){
         {255,94,0}, //fire
         {255,34,0}, //lava
         {229,221,221}, //steam
-        {47,43,43} //smoke
+        {47,43,43}, //smoke
+        {15,230,44} //flammable gas
     };
 
     Particle grid[64][64];
@@ -86,7 +88,7 @@ int main(int argv, char* args[]){
     uiRect.x=0;
     uiRect.y=640;
 
-    SDL_Surface *uiSelectionImage=SDL_CreateRGBSurface(0,29,10,32,0,0,0,0);
+    SDL_Surface *uiSelectionImage=SDL_CreateRGBSurface(0,30,10,32,0,0,0,0);
     SDL_Rect uiSelectionRect=uiSelectionImage->clip_rect;
     SDL_FillRect(uiSelectionImage,NULL,SDL_MapRGB(screen->format,255,255,255));
     uiSelectionRect.y=715;
@@ -112,10 +114,10 @@ int main(int argv, char* args[]){
             else if(event.type==SDL_MOUSEWHEEL){
                 if(event.wheel.y<0){
                     particlePlacingId++;
-                    if(particlePlacingId==9) particlePlacingId=1;
+                    if(particlePlacingId==12) particlePlacingId=1;
                 }else if(event.wheel.y>0){
                     particlePlacingId--;
-                    if(particlePlacingId==0) particlePlacingId=8;
+                    if(particlePlacingId==0) particlePlacingId=11;
                 }
             }
             else if(event.type==SDL_MOUSEBUTTONDOWN){
@@ -166,7 +168,7 @@ int main(int argv, char* args[]){
         for(int i=0;i<64;i++){
             for(int j=0;j<64;j++){
                 //Fire disappearing
-                if(grid[i][j].type==FIRE&&(rand() % 101==0||(grid[i][j-1].type!=AIR&&j>0))){
+                if(grid[i][j].type==FIRE&&rand() % 101==0){
                     grid[i][j].type=SMOKE;
                     if(grid[i][j-1].type==AIR&&j>0){
                         grid[i][j-1].type=SMOKE;
@@ -175,7 +177,7 @@ int main(int argv, char* args[]){
 
                 //Fire spreading, burning and water evaporation
                 if(grid[i][j].type==FIRE||grid[i][j].type==LAVA){
-                    if(rand()%101<4&&i<63&&(isInThatList(FLAMMABLE,grid[i+1][j].type)||grid[i+1][j].type==WATER)){
+                    if(rand()%101<2&&i<63&&(isInThatList(FLAMMABLE,grid[i+1][j].type)||grid[i+1][j].type==WATER)){
                         if(grid[i+1][j].type==WATER){
                             grid[i+1][j].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -184,7 +186,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j].type=FIRE;
                     }
-                    if(rand()%101<4&&i>0&&(isInThatList(FLAMMABLE,grid[i-1][j].type)||grid[i-1][j].type==WATER)){
+                    if(rand()%101<2&&i>0&&(isInThatList(FLAMMABLE,grid[i-1][j].type)||grid[i-1][j].type==WATER)){
                         if(grid[i-1][j].type==WATER){
                             grid[i-1][j].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -193,7 +195,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j].type=FIRE;
                     }
-                    if(rand()%101<4&&i<63&&j<63&&(isInThatList(FLAMMABLE,grid[i+1][j+1].type)||grid[i+1][j+1].type==WATER)){
+                    if(rand()%101<2&&i<63&&j<63&&(isInThatList(FLAMMABLE,grid[i+1][j+1].type)||grid[i+1][j+1].type==WATER)){
                         if(grid[i+1][j+1].type==WATER){
                             grid[i+1][j+1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -202,7 +204,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j+1].type=FIRE;
                     }
-                    if(rand()%101<4&&i>0&&j<63&&(isInThatList(FLAMMABLE,grid[i-1][j+1].type)||grid[i-1][j+1].type==WATER)){
+                    if(rand()%101<2&&i>0&&j<63&&(isInThatList(FLAMMABLE,grid[i-1][j+1].type)||grid[i-1][j+1].type==WATER)){
                         if(grid[i-1][j+1].type==WATER){
                             grid[i-1][j+1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -211,7 +213,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j+1].type=FIRE;
                     }
-                    if(rand()%101<4&&i>0&&j>0&&(isInThatList(FLAMMABLE,grid[i-1][j-1].type)||grid[i-1][j-1].type==WATER)){
+                    if(rand()%101<2&&i>0&&j>0&&(isInThatList(FLAMMABLE,grid[i-1][j-1].type)||grid[i-1][j-1].type==WATER)){
                         if(grid[i-1][j-1].type==WATER){
                             grid[i-1][j-1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -220,7 +222,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j-1].type=FIRE;
                     }
-                    if(rand()%101<4&&i<63&&j>0&&(isInThatList(FLAMMABLE,grid[i+1][j-1].type)||grid[i+1][j-1].type==WATER)){
+                    if(rand()%101<2&&i<63&&j>0&&(isInThatList(FLAMMABLE,grid[i+1][j-1].type)||grid[i+1][j-1].type==WATER)){
                         if(grid[i+1][j-1].type==WATER){
                             grid[i+1][j-1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -229,7 +231,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j-1].type=FIRE;
                     }
-                    if(rand()%101<4&&j<63&&(isInThatList(FLAMMABLE,grid[i][j+1].type)||grid[i][j+1].type==WATER)){
+                    if(rand()%101<2&&j<63&&(isInThatList(FLAMMABLE,grid[i][j+1].type)||grid[i][j+1].type==WATER)){
                         if(grid[i][j+1].type==WATER){
                             grid[i][j+1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -238,7 +240,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i][j+1].type=FIRE;
                     }
-                    if(rand()%101<4&&j>0&&(isInThatList(FLAMMABLE,grid[i][j-1].type)||grid[i][j-1].type==WATER)){
+                    if(rand()%101<2&&j>0&&(isInThatList(FLAMMABLE,grid[i][j-1].type)||grid[i][j-1].type==WATER)){
                         if(grid[i][j-1].type==WATER){
                             grid[i][j-1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -339,7 +341,7 @@ int main(int argv, char* args[]){
 
         //UI
         SDL_BlitSurface(uiImage,NULL,screen,&uiRect);
-        uiSelectionRect.x=155+(30*particlePlacingId);
+        uiSelectionRect.x=154+(31*particlePlacingId);
         SDL_BlitSurface(uiSelectionImage,NULL,screen,&uiSelectionRect);
 
         if((1000/16)>SDL_GetTicks()-frameStartTick) SDL_Delay(1000/16-(SDL_GetTicks()-frameStartTick));
