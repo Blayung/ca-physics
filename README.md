@@ -1,7 +1,6 @@
 # Cellular Automaton Physics Project
 ## Features
 * Simple 2d physics
-    * Fire physics
     * Gases physics
     * Liquid physics
     * Powders physics
