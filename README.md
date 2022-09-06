@@ -13,7 +13,6 @@
 **R ->** Reset the grid  
 **Q/Escape ->** Quit  
 ## Compiling
-### Linux
 Clone the repo:  
 `git clone https://github.com/Blayung/ca-physics.git`  
 `cd ca-physics`  
@@ -27,10 +26,3 @@ Compile the program:
 
 Run it:  
 `./a.out`
-### Windows
-1. Download [this repo](https://github.com/Blayung/ca-physics/archive/refs/heads/main.zip/).
-2. Install [mingw](https://sourceforge.net/projects/mingw/), and add its executables to the path.
-3. Download [sdl2](https://github.com/libsdl-org/SDL/releases/) and [sdl2 image](https://github.com/libsdl-org/SDL_image/releases/), and then extract them somewhere.
-4. Open cmd, and go into the extracted repo.
-5. Compile the program: `g++ main.cpp -Ipath/to/sdl2/x86_64-w64-mingw32/include/ -Lpath/to/sdl2/x86_64-w64-mingw32/lib/ -Ipath/to/sdl2image/x86_64-w64-mingw32/include/ -Lpath/to/sdl2image/x86_64-w64-mingw32/lib/ -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -mwindows`
-6. Run the program: `a.exe`
