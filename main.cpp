@@ -6,7 +6,7 @@
 
 struct Particle{
     bool toMove;
-    int type; // 0->stone, 1->wood, 2->water, 3->oil, 4->sand, 5->gunpowder, 6->fire, 7->lava, 8->steam, 9->smoke, 10->air
+    int type; // 0->air, 1->stone, 2->wood, 3->water, 4->oil, 5->sand, 6->gunpowder, 7->fire, 8->lava, 9->steam, 10->smoke
     SDL_Surface *image;
     SDL_Rect rect;
 };
@@ -32,29 +32,30 @@ int main(int argv, char* args[]){
 
     // Pre-loop stuff
     //
-    // 0->stone, 1->wood, 2->water, 3->oil, 4->sand, 5->gunpowder, 6->fire, 7->lava, 8->steam, 9->smoke, 10->air
-    const int STONE=0;
-    const int WOOD=1;
-    const int WATER=2;
-    const int OIL=3;
-    const int SAND=4;
-    const int GUNPOWDER=5;
-    const int FIRE=6;
-    const int LAVA=7;
-    const int STEAM=8;
-    const int SMOKE=9;
-    const int AIR=10;
+    // 0->air, 1->stone, 2->wood, 3->water, 4->oil, 5->sand, 6->gunpowder, 7->fire, 8->lava, 9->steam, 10->smoke
+    const int AIR=0;
+    const int STONE=1;
+    const int WOOD=2;
+    const int WATER=3;
+    const int OIL=4;
+    const int SAND=5;
+    const int GUNPOWDER=6;
+    const int FIRE=7;
+    const int LAVA=8;
+    const int STEAM=9;
+    const int SMOKE=10;
 
-    const int SOLIDS[2]={0,1};
-    const int POWDERS[2]={4,5};
-    const int FLUIDS[3]={2,3,7};
-    const int GASES[2]={9,8};
+    const int SOLIDS[2]={1,2};
+    const int POWDERS[2]={5,6};
+    const int FLUIDS[3]={3,4,8};
+    const int GASES[2]={9,10};
 
-    const int STARTING_FIRE[2]={6,7};
-    const int FLAMMABLE[3]={1,3,5};
-    const int CAN_GO_THROUGH[3]={10,9,8};
+    const int STARTING_FIRE[2]={7,8};
+    const int FLAMMABLE[3]={2,4,6};
+    const int CAN_GO_THROUGH[3]={0,9,10};
 
     const int PARTICLE_COLORS[11][3]={
+        {0,0,0}, //air
         {97,92,88}, //stone
         {168,126,41}, //wood
         {25,46,238}, //water
@@ -64,8 +65,7 @@ int main(int argv, char* args[]){
         {255,94,0}, //fire
         {255,34,0}, //lava
         {229,221,221}, //steam
-        {47,43,43}, //smoke
-        {0,0,0} //air
+        {47,43,43} //smoke
     };
 
     Particle grid[64][64];
@@ -79,7 +79,7 @@ int main(int argv, char* args[]){
         }
     }
 
-    int particlePlacingId=0;
+    int particlePlacingId=1;
 
     SDL_Surface *uiImage=IMG_Load("ui.png");
     SDL_Rect uiRect=uiImage->clip_rect;
@@ -112,10 +112,10 @@ int main(int argv, char* args[]){
             else if(event.type==SDL_MOUSEWHEEL){
                 if(event.wheel.y<0){
                     particlePlacingId++;
-                    if(particlePlacingId==8) particlePlacingId=0;
+                    if(particlePlacingId==9) particlePlacingId=1;
                 }else if(event.wheel.y>0){
                     particlePlacingId--;
-                    if(particlePlacingId==-1) particlePlacingId=7;
+                    if(particlePlacingId==0) particlePlacingId=8;
                 }
             }
             else if(event.type==SDL_MOUSEBUTTONDOWN){
@@ -151,7 +151,7 @@ int main(int argv, char* args[]){
         if(isLeftMouseButtonDown&&mouseY<640&&mouseY>0&&mouseX<640&&mouseX>0){
             grid[mouseX/10][mouseY/10].type=particlePlacingId;
         }else if(isRightMouseButtonDown&&mouseY<640&&mouseY>0&&mouseX<640&&mouseX>0){
-            grid[mouseX/10][mouseY/10].type=10;
+            grid[mouseX/10][mouseY/10].type=AIR;
         }
     
         //Every-frame stuff
@@ -174,7 +174,7 @@ int main(int argv, char* args[]){
                 }
 
                 //Fire spreading, burning and water evaporation
-                if(grid[i][j].type==6||grid[i][j].type==7){
+                if(grid[i][j].type==FIRE||grid[i][j].type==LAVA){
                     if(rand()%101<4&&i<63&&(isInThatList(FLAMMABLE,grid[i+1][j].type)||grid[i+1][j].type==WATER)){
                         if(grid[i+1][j].type==WATER){
                             grid[i+1][j].type=STEAM;
@@ -255,17 +255,17 @@ int main(int argv, char* args[]){
                     if(j<63&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
                         grid[i][j+1].type=grid[i][j].type;
                         grid[i][j+1].toMove=false;
-                        grid[i][j].type=10;
+                        grid[i][j].type=AIR;
                     }
                     else if(j<63&&i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j+1].type)){
                         grid[i-1][j+1].type=grid[i][j].type;
                         grid[i-1][j+1].toMove=false;
-                        grid[i][j].type=10;
+                        grid[i][j].type=AIR;
                     }
                     else if(j<63&&i<63&&isInThatList(CAN_GO_THROUGH,grid[i+1][j+1].type)){
                         grid[i+1][j+1].type=grid[i][j].type;
                         grid[i+1][j+1].toMove=false;
-                        grid[i][j].type=10;
+                        grid[i][j].type=AIR;
                     }
                 }
                 //Fluids
@@ -302,7 +302,7 @@ int main(int argv, char* args[]){
                         grid[i][j-1].type=grid[i][j].type;
                         grid[i][j-1].toMove=false;
                         grid[i][j].type=AIR;
-                    }else if(j>0&&i>0&&grid[i-1][j-1].type==10){
+                    }else if(j>0&&i>0&&grid[i-1][j-1].type==AIR){
                         grid[i-1][j-1].type=grid[i][j].type;
                         grid[i-1][j-1].toMove=false;
                         grid[i][j].type=AIR;
@@ -339,7 +339,7 @@ int main(int argv, char* args[]){
 
         //UI
         SDL_BlitSurface(uiImage,NULL,screen,&uiRect);
-        uiSelectionRect.x=185+(30*particlePlacingId);
+        uiSelectionRect.x=155+(30*particlePlacingId);
         SDL_BlitSurface(uiSelectionImage,NULL,screen,&uiSelectionRect);
 
         if((1000/16)>SDL_GetTicks()-frameStartTick) SDL_Delay(1000/16-(SDL_GetTicks()-frameStartTick));
