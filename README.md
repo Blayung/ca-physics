@@ -4,7 +4,7 @@
     * Gases physics
     * Liquid physics
     * Powders physics
-* Particles: stone, wood, water, oil, sand, gunpowder, fire, lava, steam, smoke
+* Particles: stone, wood, water, oil, sand, gunpowder, fire, lava, steam, smoke, flammable gas
 ## Controls
 **Scroll ->** Choose a particle  
 **LMB ->** Place a particle  
