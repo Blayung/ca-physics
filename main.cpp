@@ -177,7 +177,7 @@ int main(int argv, char* args[]){
 
                 //Fire spreading, burning and water evaporation
                 if(grid[i][j].type==FIRE||grid[i][j].type==LAVA){
-                    if(rand()%101<2&&i<63&&(isInThatList(FLAMMABLE,grid[i+1][j].type)||grid[i+1][j].type==WATER)){
+                    if(rand()%150<2&&i<63&&(isInThatList(FLAMMABLE,grid[i+1][j].type)||grid[i+1][j].type==WATER)){
                         if(grid[i+1][j].type==WATER){
                             grid[i+1][j].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -186,7 +186,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j].type=FIRE;
                     }
-                    if(rand()%101<2&&i>0&&(isInThatList(FLAMMABLE,grid[i-1][j].type)||grid[i-1][j].type==WATER)){
+                    if(rand()%150<2&&i>0&&(isInThatList(FLAMMABLE,grid[i-1][j].type)||grid[i-1][j].type==WATER)){
                         if(grid[i-1][j].type==WATER){
                             grid[i-1][j].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -195,7 +195,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j].type=FIRE;
                     }
-                    if(rand()%101<2&&i<63&&j<63&&(isInThatList(FLAMMABLE,grid[i+1][j+1].type)||grid[i+1][j+1].type==WATER)){
+                    if(rand()%150<2&&i<63&&j<63&&(isInThatList(FLAMMABLE,grid[i+1][j+1].type)||grid[i+1][j+1].type==WATER)){
                         if(grid[i+1][j+1].type==WATER){
                             grid[i+1][j+1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -204,7 +204,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j+1].type=FIRE;
                     }
-                    if(rand()%101<2&&i>0&&j<63&&(isInThatList(FLAMMABLE,grid[i-1][j+1].type)||grid[i-1][j+1].type==WATER)){
+                    if(rand()%150<2&&i>0&&j<63&&(isInThatList(FLAMMABLE,grid[i-1][j+1].type)||grid[i-1][j+1].type==WATER)){
                         if(grid[i-1][j+1].type==WATER){
                             grid[i-1][j+1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -213,7 +213,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j+1].type=FIRE;
                     }
-                    if(rand()%101<2&&i>0&&j>0&&(isInThatList(FLAMMABLE,grid[i-1][j-1].type)||grid[i-1][j-1].type==WATER)){
+                    if(rand()%150<2&&i>0&&j>0&&(isInThatList(FLAMMABLE,grid[i-1][j-1].type)||grid[i-1][j-1].type==WATER)){
                         if(grid[i-1][j-1].type==WATER){
                             grid[i-1][j-1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -222,7 +222,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j-1].type=FIRE;
                     }
-                    if(rand()%101<2&&i<63&&j>0&&(isInThatList(FLAMMABLE,grid[i+1][j-1].type)||grid[i+1][j-1].type==WATER)){
+                    if(rand()%150<2&&i<63&&j>0&&(isInThatList(FLAMMABLE,grid[i+1][j-1].type)||grid[i+1][j-1].type==WATER)){
                         if(grid[i+1][j-1].type==WATER){
                             grid[i+1][j-1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -231,7 +231,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j-1].type=FIRE;
                     }
-                    if(rand()%101<2&&j<63&&(isInThatList(FLAMMABLE,grid[i][j+1].type)||grid[i][j+1].type==WATER)){
+                    if(rand()%150<2&&j<63&&(isInThatList(FLAMMABLE,grid[i][j+1].type)||grid[i][j+1].type==WATER)){
                         if(grid[i][j+1].type==WATER){
                             grid[i][j+1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -240,7 +240,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i][j+1].type=FIRE;
                     }
-                    if(rand()%101<2&&j>0&&(isInThatList(FLAMMABLE,grid[i][j-1].type)||grid[i][j-1].type==WATER)){
+                    if(rand()%150<2&&j>0&&(isInThatList(FLAMMABLE,grid[i][j-1].type)||grid[i][j-1].type==WATER)){
                         if(grid[i][j-1].type==WATER){
                             grid[i][j-1].type=STEAM;
                             if(grid[i][j].type==LAVA)
