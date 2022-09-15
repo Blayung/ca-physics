@@ -1,7 +1,8 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 #include <time.h>
 
 struct Particle{
@@ -16,17 +17,63 @@ bool isInThatList(C&& c, T e) {
     return std::find(std::begin(c), std::end(c), e) != std::end(c);
 };
 
+std::string floatToString(float value){
+    std::ostringstream temp;
+    temp.precision(5);
+    temp << value;
+    return temp.str();
+}
+
 int main(int argv, char* args[]){
     //Init
+    int gridSize;
+    int particleSize;
+    std::string temp;
+    while(true) {
+         std::cout<<"Enter the size of a single particle: ";
+         std::cin>>temp;
+
+         try{
+             particleSize=std::stoi(temp);
+         }catch(std::invalid_argument){
+             std::cout<<"It has to be an integer!\n";
+             continue;
+         }
+         if(particleSize<10){
+             std::cout<<"Particle's size needs to be at least 10!\n";
+         }else{
+             break;
+         }
+     }
+     while(true) {
+         std::cout<<"Enter the size of the grid: ";
+         std::cin>>temp;
+
+         try{
+             gridSize=std::stoi(temp);
+         }catch(std::invalid_argument){
+             std::cout<<"It has to be an integer!\n";
+             continue;
+         }
+         if(gridSize<80){
+             std::cout<<"Grid's size needs to be at least 80!\n";
+         }else{
+             temp.clear();
+             break;
+         }
+     }
+
     srand(time(NULL));
     
-    if(SDL_Init(SDL_INIT_EVERYTHING)>0){
-        std::cout<<"SDL Error: "<<std::endl<<SDL_GetError()<<std::endl;
-    }
+    if(SDL_Init(SDL_INIT_EVERYTHING)<0)
+        std::cout<<"SDL Error:"<<"\n"<<SDL_GetError()<<"\n";
 
-    SDL_Window *window=SDL_CreateWindow("Physics simulation",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,640,750,SDL_WINDOW_OPENGL);
+    if(TTF_Init()<0)
+        std::cout<<"SDL TTF Error:"<<"\n"<<TTF_GetError()<<"\n";
+
+    SDL_Window *window=SDL_CreateWindow("Physics simulation",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,gridSize*particleSize,gridSize*particleSize+110,SDL_WINDOW_OPENGL);
     if(window==NULL){
-        std::cout<<"SDL Error: "<<std::endl<<SDL_GetError()<<std::endl;
+        std::cout<<"SDL Error:"<<"\n"<<SDL_GetError()<<"\n";
     }
     SDL_Surface *screen=SDL_GetWindowSurface(window);
 
@@ -70,11 +117,11 @@ int main(int argv, char* args[]){
         {15,230,44} //flammable gas
     };
 
-    Particle grid[64][64];
-    for(int i=0;i<64;i++){
-        for(int j=0;j<64;j++){
+    Particle grid[gridSize][gridSize];
+    for(int i=0;i<gridSize;i++){
+        for(int j=0;j<gridSize;j++){
             grid[i][j].type=AIR;
-            grid[i][j].image=SDL_CreateRGBSurface(0,10,10,32,0,0,0,0);
+            grid[i][j].image=SDL_CreateRGBSurface(0,particleSize,particleSize,32,0,0,0,0);
             grid[i][j].rect=grid[i][j].image->clip_rect;
             grid[i][j].rect.x=0;
             grid[i][j].rect.y=0;
@@ -82,16 +129,31 @@ int main(int argv, char* args[]){
     }
 
     int particlePlacingId=1;
+    int placingArea=1; //for later use
+    int fps=32;
 
-    SDL_Surface *uiImage=IMG_Load("ui.png");
-    SDL_Rect uiRect=uiImage->clip_rect;
-    uiRect.x=0;
-    uiRect.y=640;
+    SDL_Surface *uiLineImage=SDL_CreateRGBSurface(0,gridSize*particleSize,3,32,0,0,0,0);
+    SDL_Rect uiLineRect=uiLineImage->clip_rect;
+    SDL_FillRect(uiLineImage,NULL,SDL_MapRGB(screen->format,255,255,255));
+    uiLineRect.x=0;
+    uiLineRect.y=gridSize*particleSize;
 
     SDL_Surface *uiSelectionImage=SDL_CreateRGBSurface(0,30,10,32,0,0,0,0);
     SDL_Rect uiSelectionRect=uiSelectionImage->clip_rect;
     SDL_FillRect(uiSelectionImage,NULL,SDL_MapRGB(screen->format,255,255,255));
-    uiSelectionRect.y=715;
+    uiSelectionRect.y=gridSize*particleSize+75;
+
+    SDL_Surface *uiParticleImage;
+    SDL_Rect uiParticleRect;
+
+    TTF_Font *monospace=TTF_OpenFont("monospace.medium.ttf", 10);
+    SDL_Surface *uiHintsSurface;
+    SDL_Rect uiHintsRect;
+    uiHintsRect.x=5;
+    uiHintsRect.y=gridSize*particleSize+5;
+    uiHintsRect.w=uiHintsSurface->w;
+    uiHintsRect.h=uiHintsSurface->h;
+    std::string uiHintsText;
 
     bool isLeftMouseButtonDown=false;
     bool isRightMouseButtonDown=false;
@@ -114,10 +176,10 @@ int main(int argv, char* args[]){
             else if(event.type==SDL_MOUSEWHEEL){
                 if(event.wheel.y<0){
                     particlePlacingId++;
-                    if(particlePlacingId==12) particlePlacingId=1;
+                    if(particlePlacingId==sizeof(PARTICLE_COLORS)/sizeof(PARTICLE_COLORS[0])) particlePlacingId=1;
                 }else if(event.wheel.y>0){
                     particlePlacingId--;
-                    if(particlePlacingId==0) particlePlacingId=11;
+                    if(particlePlacingId==0) particlePlacingId=sizeof(PARTICLE_COLORS)/sizeof(PARTICLE_COLORS[0])-1;
                 }
             }
             else if(event.type==SDL_MOUSEBUTTONDOWN){
@@ -133,9 +195,22 @@ int main(int argv, char* args[]){
                 isRightMouseButtonDown=false;
             }
             else if(event.type==SDL_KEYDOWN){
+                if(event.key.keysym.sym==SDLK_UP&&placingArea<10){
+                    placingArea++;
+                }
+                if(event.key.keysym.sym==SDLK_DOWN&&placingArea>1){
+                    placingArea--;
+                }
+                if(event.key.keysym.sym==SDLK_RIGHT&&fps<320){
+                    fps+=2;
+                }
+                if(event.key.keysym.sym==SDLK_LEFT&&fps>8){
+                    fps-=2;
+                }
+
                 if(event.key.keysym.sym==SDLK_r){
-                    for(int i=0;i<64;i++){
-                        for(int j=0;j<64;j++){
+                    for(int i=0;i<gridSize;i++){
+                        for(int j=0;j<gridSize;j++){
                             grid[i][j].type=AIR;
                         }
                     }
@@ -150,23 +225,23 @@ int main(int argv, char* args[]){
         //Mouse events
         SDL_PumpEvents();
         SDL_GetMouseState(&mouseX,&mouseY);
-        if(isLeftMouseButtonDown&&mouseY<640&&mouseY>0&&mouseX<640&&mouseX>0){
-            grid[mouseX/10][mouseY/10].type=particlePlacingId;
-        }else if(isRightMouseButtonDown&&mouseY<640&&mouseY>0&&mouseX<640&&mouseX>0){
-            grid[mouseX/10][mouseY/10].type=AIR;
+        if(isLeftMouseButtonDown&&mouseY<gridSize*particleSize&&mouseY>0&&mouseX<gridSize*particleSize&&mouseX>0){
+            grid[mouseX/particleSize][mouseY/particleSize].type=particlePlacingId;
+        }else if(isRightMouseButtonDown&&mouseY<gridSize*particleSize&&mouseY>0&&mouseX<gridSize*particleSize&&mouseX>0){
+            grid[mouseX/particleSize][mouseY/particleSize].type=AIR;
         }
     
         //Every-frame stuff
         SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format, 0,0,0));
 
         //Physics
-        for(int i=0;i<64;i++){
-            for(int j=0;j<64;j++){
+        for(int i=0;i<gridSize;i++){
+            for(int j=0;j<gridSize;j++){
                 grid[i][j].toMove=true;
             }
         }   
-        for(int i=0;i<64;i++){
-            for(int j=0;j<64;j++){
+        for(int i=0;i<gridSize;i++){
+            for(int j=0;j<gridSize;j++){
                 //Fire disappearing
                 if(grid[i][j].type==FIRE&&rand() % 101==0){
                     grid[i][j].type=SMOKE;
@@ -177,7 +252,7 @@ int main(int argv, char* args[]){
 
                 //Fire spreading, burning and water evaporation
                 if(grid[i][j].type==FIRE||grid[i][j].type==LAVA){
-                    if(rand()%150<2&&i<63&&(isInThatList(FLAMMABLE,grid[i+1][j].type)||grid[i+1][j].type==WATER)){
+                    if(rand()%150<2&&i<gridSize-1&&(isInThatList(FLAMMABLE,grid[i+1][j].type)||grid[i+1][j].type==WATER)){
                         if(grid[i+1][j].type==WATER){
                             grid[i+1][j].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -195,7 +270,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j].type=FIRE;
                     }
-                    if(rand()%150<2&&i<63&&j<63&&(isInThatList(FLAMMABLE,grid[i+1][j+1].type)||grid[i+1][j+1].type==WATER)){
+                    if(rand()%150<2&&i<gridSize-1&&j<gridSize-1&&(isInThatList(FLAMMABLE,grid[i+1][j+1].type)||grid[i+1][j+1].type==WATER)){
                         if(grid[i+1][j+1].type==WATER){
                             grid[i+1][j+1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -204,7 +279,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j+1].type=FIRE;
                     }
-                    if(rand()%150<2&&i>0&&j<63&&(isInThatList(FLAMMABLE,grid[i-1][j+1].type)||grid[i-1][j+1].type==WATER)){
+                    if(rand()%150<2&&i>0&&j<gridSize-1&&(isInThatList(FLAMMABLE,grid[i-1][j+1].type)||grid[i-1][j+1].type==WATER)){
                         if(grid[i-1][j+1].type==WATER){
                             grid[i-1][j+1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -222,7 +297,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i-1][j-1].type=FIRE;
                     }
-                    if(rand()%150<2&&i<63&&j>0&&(isInThatList(FLAMMABLE,grid[i+1][j-1].type)||grid[i+1][j-1].type==WATER)){
+                    if(rand()%150<2&&i<gridSize-1&&j>0&&(isInThatList(FLAMMABLE,grid[i+1][j-1].type)||grid[i+1][j-1].type==WATER)){
                         if(grid[i+1][j-1].type==WATER){
                             grid[i+1][j-1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -231,7 +306,7 @@ int main(int argv, char* args[]){
                         else
                         grid[i+1][j-1].type=FIRE;
                     }
-                    if(rand()%150<2&&j<63&&(isInThatList(FLAMMABLE,grid[i][j+1].type)||grid[i][j+1].type==WATER)){
+                    if(rand()%150<2&&j<gridSize-1&&(isInThatList(FLAMMABLE,grid[i][j+1].type)||grid[i][j+1].type==WATER)){
                         if(grid[i][j+1].type==WATER){
                             grid[i][j+1].type=STEAM;
                             if(grid[i][j].type==LAVA)
@@ -254,17 +329,17 @@ int main(int argv, char* args[]){
                 //Falling and etc
                 //Powders
                 if(isInThatList(POWDERS,grid[i][j].type)&&grid[i][j].toMove){
-                    if(j<63&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
+                    if(j<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
                         grid[i][j+1].type=grid[i][j].type;
                         grid[i][j+1].toMove=false;
                         grid[i][j].type=AIR;
                     }
-                    else if(j<63&&i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j+1].type)){
+                    else if(j<gridSize-1&&i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j+1].type)){
                         grid[i-1][j+1].type=grid[i][j].type;
                         grid[i-1][j+1].toMove=false;
                         grid[i][j].type=AIR;
                     }
-                    else if(j<63&&i<63&&isInThatList(CAN_GO_THROUGH,grid[i+1][j+1].type)){
+                    else if(j<gridSize-1&&i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j+1].type)){
                         grid[i+1][j+1].type=grid[i][j].type;
                         grid[i+1][j+1].toMove=false;
                         grid[i][j].type=AIR;
@@ -272,17 +347,17 @@ int main(int argv, char* args[]){
                 }
                 //Fluids
                 else if(isInThatList(FLUIDS,grid[i][j].type)&&grid[i][j].toMove){
-                    if(j<63&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
+                    if(j<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
                         grid[i][j+1].type=grid[i][j].type;
                         grid[i][j+1].toMove=false;
                         grid[i][j].type=AIR;
                     }
-                    else if(j<63&&i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j+1].type)){
+                    else if(j<gridSize-1&&i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j+1].type)){
                         grid[i-1][j+1].type=grid[i][j].type;
                         grid[i-1][j+1].toMove=false;
                         grid[i][j].type=AIR;
                     }
-                    else if(j<63&&i<63&&isInThatList(CAN_GO_THROUGH,grid[i+1][j+1].type)){
+                    else if(j<gridSize-1&&i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j+1].type)){
                         grid[i+1][j+1].type=grid[i][j].type;
                         grid[i+1][j+1].toMove=false;
                         grid[i][j].type=AIR;
@@ -292,7 +367,7 @@ int main(int argv, char* args[]){
                         grid[i-1][j].toMove=false;
                         grid[i][j].type=AIR;
                     }
-                    else if(i<63&&isInThatList(CAN_GO_THROUGH,grid[i+1][j].type)){
+                    else if(i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j].type)){
                         grid[i+1][j].type=grid[i][j].type;
                         grid[i+1][j].toMove=false;
                         grid[i][j].type=AIR;
@@ -308,7 +383,7 @@ int main(int argv, char* args[]){
                         grid[i-1][j-1].type=grid[i][j].type;
                         grid[i-1][j-1].toMove=false;
                         grid[i][j].type=AIR;
-                    }else if(j>0&&i<63&&grid[i+1][j-1].type==AIR){
+                    }else if(j>0&&i<gridSize-1&&grid[i+1][j-1].type==AIR){
                         grid[i+1][j-1].type=grid[i][j].type;
                         grid[i+1][j-1].toMove=false;
                         grid[i][j].type=AIR;
@@ -316,7 +391,7 @@ int main(int argv, char* args[]){
                         grid[i-1][j].type=grid[i][j].type;
                         grid[i-1][j].toMove=false;
                         grid[i][j].type=AIR;
-                    }else if(i<63&&grid[i+1][j].type==AIR){
+                    }else if(i<gridSize-1&&grid[i+1][j].type==AIR){
                         grid[i+1][j].type=grid[i][j].type;
                         grid[i+1][j].toMove=false;
                         grid[i][j].type=AIR;
@@ -326,30 +401,38 @@ int main(int argv, char* args[]){
         }
 
         //Particle rendering
-        for(int i=0;i<64;i++){
-            for(int j=0;j<64;j++){
+        for(int i=0;i<gridSize;i++){
+            for(int j=0;j<gridSize;j++){
                 if(grid[i][j].type!=AIR){
                     SDL_FillRect(grid[i][j].image,NULL,SDL_MapRGB(screen->format,
                         PARTICLE_COLORS[grid[i][j].type][0],PARTICLE_COLORS[grid[i][j].type][1],PARTICLE_COLORS[grid[i][j].type][2]
                     ));
-                    grid[i][j].rect.x=i*10;
-                    grid[i][j].rect.y=j*10;
+                    grid[i][j].rect.x=i*particleSize;
+                    grid[i][j].rect.y=j*particleSize;
                     SDL_BlitSurface(grid[i][j].image,NULL,screen,&grid[i][j].rect);
                 }
             }
         }
 
         //UI
-        SDL_BlitSurface(uiImage,NULL,screen,&uiRect);
-        uiSelectionRect.x=154+(31*particlePlacingId);
+        uiSelectionRect.x=((gridSize*particleSize-31*(sizeof(PARTICLE_COLORS)/sizeof(PARTICLE_COLORS[0])-1))/2)+(31*(particlePlacingId-1));
         SDL_BlitSurface(uiSelectionImage,NULL,screen,&uiSelectionRect);
+        uiHintsText="Lmb/Rmb - Place/Delete\nScroll - Change selected particle\nR - Reset the grid\nQ/Escape - Quit\nLeft/Right arrow - Change speed\nSpeed: "+floatToString((float)fps/32)+"x";
+        uiHintsSurface=TTF_RenderText_Blended_Wrapped(monospace, uiHintsText.c_str(), {255,255,255}, 0);
+        SDL_BlitSurface(uiHintsSurface,NULL,screen,&uiHintsRect);
+        SDL_BlitSurface(uiLineImage,NULL,screen,&uiLineRect);
+        for(int i=1;i<sizeof(PARTICLE_COLORS)/sizeof(PARTICLE_COLORS[0]);i++){
+            uiParticleImage=SDL_CreateRGBSurface(0,30,30,32,0,0,0,0);
+            uiParticleRect=uiParticleImage->clip_rect;
+            SDL_FillRect(uiParticleImage,NULL,SDL_MapRGB(screen->format,PARTICLE_COLORS[i][0],PARTICLE_COLORS[i][1],PARTICLE_COLORS[i][2]));
+            uiParticleRect.x=((gridSize*particleSize-31*(sizeof(PARTICLE_COLORS)/sizeof(PARTICLE_COLORS[0])-1))/2)+(31*(i-1));
+            uiParticleRect.y=gridSize*particleSize+40;
+            SDL_BlitSurface(uiParticleImage,NULL,screen,&uiParticleRect);
+        }
 
-        if((1000/16)>SDL_GetTicks()-frameStartTick) SDL_Delay(1000/16-(SDL_GetTicks()-frameStartTick));
+        if((1000/fps)>SDL_GetTicks()-frameStartTick) SDL_Delay(1000/fps-(SDL_GetTicks()-frameStartTick));
         SDL_UpdateWindowSurface(window);
     }
 
-    SDL_FreeSurface(screen);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
     return 0;
 }
