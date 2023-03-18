@@ -362,15 +362,17 @@ int main(int argv, char* args[]){
                         grid[i+1][j+1].toMove=false;
                         grid[i][j].type=AIR;
                     }
-                    else if(i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j].type)){
-                        grid[i-1][j].type=grid[i][j].type;
-                        grid[i-1][j].toMove=false;
-                        grid[i][j].type=AIR;
-                    }
-                    else if(i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j].type)){
-                        grid[i+1][j].type=grid[i][j].type;
-                        grid[i+1][j].toMove=false;
-                        grid[i][j].type=AIR;
+                    else if(isInThatList(FLUIDS,grid[i][j+1].type)){
+                        if(i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j].type)){
+                            grid[i-1][j].type=grid[i][j].type;
+                            grid[i-1][j].toMove=false;
+                            grid[i][j].type=AIR;
+                        }
+                        else if(i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j].type)){
+                            grid[i+1][j].type=grid[i][j].type;
+                            grid[i+1][j].toMove=false;
+                            grid[i][j].type=AIR;
+                        }
                     }
                 }
                 //Gases
