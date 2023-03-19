@@ -389,14 +389,16 @@ int main(int argv, char* args[]){
                         grid[i+1][j-1].type=grid[i][j].type;
                         grid[i+1][j-1].toMove=false;
                         grid[i][j].type=AIR;
-                    }else if(i>0&&grid[i-1][j].type==AIR){
-                        grid[i-1][j].type=grid[i][j].type;
-                        grid[i-1][j].toMove=false;
-                        grid[i][j].type=AIR;
-                    }else if(i<gridSize-1&&grid[i+1][j].type==AIR){
-                        grid[i+1][j].type=grid[i][j].type;
-                        grid[i+1][j].toMove=false;
-                        grid[i][j].type=AIR;
+                    }else if(isInThatList(GASES,grid[i][j-1].type)){
+                        if(i>0&&grid[i-1][j].type==AIR){
+                            grid[i-1][j].type=grid[i][j].type;
+                            grid[i-1][j].toMove=false;
+                            grid[i][j].type=AIR;
+                        }else if(i<gridSize-1&&grid[i+1][j].type==AIR){
+                            grid[i+1][j].type=grid[i][j].type;
+                            grid[i+1][j].toMove=false;
+                            grid[i][j].type=AIR;
+                        }
                     }
                 }
             }
