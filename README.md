@@ -13,7 +13,7 @@
 **R ->** Reset the grid  
 **Q/Escape ->** Quit  
 **Left/Right arrow ->** Change speed  
-## Compiling
+## Compiling (assuming you're on linux)
 Clone the repo:  
 `git clone https://github.com/Blayung/ca-physics.git`  
 `cd ca-physics`  
