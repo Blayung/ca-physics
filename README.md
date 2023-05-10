@@ -1,30 +1,8 @@
 # Cellular Automaton Physics Project
-## THIS IS THE RUST DEVELOPMENT BRANCH, THIS README SHOWS INACCURATE INFORMATION, I WILL UPDATE IT SOON (CURRENTLY, I'M TOO LAZY). BETTER READ THE RUST SOURCE CODE AND COMPILE WITH CARGO TO KNOW MORE.
-## Features
-* Simple 2d physics
-    * Gases physics
-    * Liquid physics
-    * Powders physics
-* Particles: stone, wood, water, oil, sand, gunpowder, fire, lava, steam, smoke, flammable gas
-* Time control, custom grid and particle sizes.
-## Controls
-**Scroll ->** Choose a particle  
-**LMB ->** Place a particle  
-**RMB ->** Remove a particle  
-**R ->** Reset the grid  
-**Q/Escape ->** Quit  
-**Left/Right arrow ->** Change speed  
-## Compiling (assuming you're on linux)
-Clone the repo:  
-`git clone https://github.com/Blayung/ca-physics.git`  
-`cd ca-physics`  
-
-Install sdl2 and sdl2 ttf (I use pacman for example):  
-`sudo pacman -S sdl2`  
-`sudo pacman -S sdl2_ttf`  
-
-Compile the program:  
-`g++ main.cpp -lSDL2 -lSDL2_ttf`  
-
-Run it:  
-`./a.out`
+## THIS IS THE RUST DEVELOPMENT BRANCH, IF YOU WANT THE STABLE C++ VERSION OF THIS PROGRAM, PLEASE SWITCH TO MAIN!!!
+## How to compile? (assuming you're on linux)
+0. Make sure you have git and cargo installed! If not, check these websites out: [https://git-scm.com/downloads](https://git-scm.com/downloads), [https://rustup.rs](https://rustup.rs)
+1. `git clone -b rust-dev --single-branch https://github.com/Blayung/ca-physics`
+2. `cd ca-physics`
+3. `cargo build --release`
+4. Now the executable should be here: `./target/release/ca-physics`
