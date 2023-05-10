@@ -1,0 +1,9 @@
+[package]
+name = "ca-physics"
+version = "0.0.0"
+authors = ["Blay"]
+edition = "2021"
+
+[dependencies]
+sdl2 = "0.35.2"
+rand = "0.8.5"
