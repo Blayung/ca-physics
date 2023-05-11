@@ -2,7 +2,7 @@ extern crate sdl2;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::mouse::MouseButton;
+use sdl2::mouse::MouseState;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 
@@ -34,8 +34,6 @@ const MATERIAL_COLORS: [Color;12] = [
     Color::RGB(20, 230, 140) // FLAMMABLE_GAS
 ];
 
-const FPS_LIMIT:u32 = 10;
-
 struct Particle {
     pub should_move: bool,
     pub particle_type: u32,
@@ -43,61 +41,10 @@ struct Particle {
 }
 
 pub fn main() {
-    // Getting the settings through terminal
-    let mut stdin_buffer: String;
-    let stdin=std::io::stdin();
-
-    let mut grid_x_size: u32;
-    loop {
-        print!("Input the grid x size: ");
-        stdin_buffer=String::new();
-        stdin.read_line(&mut stdin_buffer).unwrap();
-        let input=stdin_buffer.parse::<u32>();
-        if input.is_ok() {
-            grid_x_size = input.unwrap();
-            if grid_x_size < 5 {
-                break;
-            }
-        }
-        println!("You must input an integer higher or equal to 5! {:?}", stdin_buffer);
-    }
-    let grid_x_size=grid_x_size;
-
-    let mut grid_y_size: u32;
-    loop {
-        print!("Input the grid y size: ");
-        stdin_buffer=String::new();
-        stdin.read_line(&mut stdin_buffer).unwrap();
-        let input=stdin_buffer.parse::<u32>();
-        if input.is_ok() {
-            grid_y_size = input.unwrap();
-            if grid_y_size < 5 {
-                break;
-            }
-        }
-        println!("You must input an integer higher or equal to 5!");
-    }
-    let grid_y_size=grid_y_size;
-
-    let mut cell_size: u32;
-    loop {
-        print!("Input the cell size: ");
-        stdin_buffer=String::new();
-        stdin.read_line(&mut stdin_buffer).unwrap();
-        let input=stdin_buffer.parse::<u32>();
-        if input.is_ok() {
-            cell_size = input.unwrap();
-            if cell_size < 5 {
-                break;
-            }
-        }
-        println!("You must input an integer higher or equal to 5!");
-    }
-    let cell_size=cell_size;
-
-    // Misc variables
-    let mut is_lmb_pressed=false;
-    let mut is_rmb_pressed=false;
+    // TODO: Get the settings from the user at runtime
+    let grid_x_size:u32=64;
+    let grid_y_size:u32=64;
+    let cell_size:u32=10;
 
     // The grid
     let mut grid: std::vec::Vec<std::vec::Vec<Particle>>=std::vec::Vec::new();
@@ -111,7 +58,7 @@ pub fn main() {
             grid[x as usize].push(
                 Particle {
                     should_move: true,
-                    particle_type: LAVA,
+                    particle_type: AIR,
                     sdl_rect: Rect::new((x * cell_size) as i32, (y * cell_size) as i32, cell_size, cell_size)
                 }
             );
@@ -128,6 +75,9 @@ pub fn main() {
         }
     }
 
+    // Misc vars
+    let mut mouse_state: MouseState;
+
     // SDL Vars
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -141,14 +91,24 @@ pub fn main() {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } | Event::KeyDown { keycode: Some(Keycode::Q), .. } => break 'main_loop,
-                Event::MouseButtonDown { mouse_btn: MouseButton::Left, .. } => is_lmb_pressed=false,
-                Event::MouseButtonUp { mouse_btn: MouseButton::Left, .. } => is_lmb_pressed=true,
-                Event::MouseButtonDown { mouse_btn: MouseButton::Right, .. } => is_rmb_pressed=false,
-                Event::MouseButtonUp { mouse_btn: MouseButton::Right, .. } => is_rmb_pressed=true,
                 _ => {}
             }
         }
-        println!("R:{}, L:{}",is_lmb_pressed,is_rmb_pressed);
+
+        mouse_state=event_pump.mouse_state();
+        if mouse_state.left() {
+            let x: usize=(mouse_state.x()/cell_size as i32) as usize;
+            let y: usize=(mouse_state.y()/cell_size as i32) as usize;
+            if x>=0 && x<=grid_x_size as usize && y>=0 && y<=grid_y_size as usize{
+                grid[x][y].particle_type=SMOKE;
+            }
+        } else if mouse_state.right() {
+            let x: usize=(mouse_state.x()/cell_size as i32) as usize;
+            let y: usize=(mouse_state.y()/cell_size as i32) as usize;
+            if x>=0 && x<grid_x_size as usize && y>=0 && y<grid_y_size as usize{
+                grid[x][y].particle_type=AIR;
+            }
+        }
         
         // Misc stuff happening every frame
         for x in &mut grid {
@@ -173,6 +133,6 @@ pub fn main() {
         canvas.present();
 
         // FPS Limit
-        std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / FPS_LIMIT));
+        std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 10));
     }
 }
