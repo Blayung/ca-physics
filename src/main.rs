@@ -121,6 +121,7 @@ fn main() {
     let mut mouse_state: sdl2::mouse::MouseState;
     let mut should_read_last_mouse_xy=false;
     let mut last_mouse_xy: (i32,i32)=(0,0);
+    let mut current_particle=1;
 
     // SDL Vars
     let sdl_context = sdl2::init().unwrap();
@@ -144,6 +145,33 @@ fn main() {
                         }
                     }
                 },
+                sdl2::event::Event::MouseWheel { direction, y, .. } => {
+                    if direction == sdl2::mouse::MouseWheelDirection::Flipped {
+                        if y<0 {
+                            current_particle+=1;
+                        } else {
+                            current_particle-=1;
+                        }
+
+                        if current_particle<1 {
+                            current_particle=MATERIAL_COLORS.len();
+                        }else if current_particle>MATERIAL_COLORS.len(){
+                            current_particle=1;
+                        }
+                    } else {
+                        if y>0 {
+                            current_particle+=1;
+                        } else {
+                            current_particle-=1;
+                        }
+
+                        if current_particle<1 {
+                            current_particle=MATERIAL_COLORS.len()-1;
+                        }else if current_particle>MATERIAL_COLORS.len()-1{
+                            current_particle=1;
+                        }
+                    }
+                },
                 _ => {}
             }
         }
@@ -161,7 +189,7 @@ fn main() {
 
             for i in line {
                 if i.0>=0 && i.0<=grid_x_size as i32 && i.1>=0 && i.1<=grid_y_size as i32 {
-                    grid[i.0 as usize][i.1 as usize].particle_type=STEAM;
+                    grid[i.0 as usize][i.1 as usize].particle_type=current_particle as u32;
                 }
             }
 
@@ -196,8 +224,6 @@ fn main() {
                 y.should_move=true;
             }
         }
-
-        //TODO: Rewrite the entire physics system over there.
 
         // Drawing to the screen
         canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
