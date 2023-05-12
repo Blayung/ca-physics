@@ -1,11 +1,6 @@
 extern crate sdl2;
 
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-use sdl2::mouse::MouseState;
-use sdl2::pixels::Color;
-use sdl2::rect::Rect;
-
+// Materials
 const AIR:u32 = 0;
 const STONE:u32 = 1;
 const WOOD:u32 = 2;
@@ -19,25 +14,25 @@ const SMOKE:u32 = 9;
 const STEAM:u32 = 10;
 const FLAMMABLE_GAS:u32 = 11;
 
-const MATERIAL_COLORS: [Color;12] = [
-    Color::RGB(0, 0, 0), // AIR
-    Color::RGB(90, 90, 90), // STONE
-    Color::RGB(150, 130, 40), // WOOD
-    Color::RGB(250, 230, 40), // SAND
-    Color::RGB(40, 40, 40), // COAL
-    Color::RGB(20, 40, 230), // WATER
-    Color::RGB(120, 70, 10), // OIL
-    Color::RGB(255, 30, 0), // LAVA
-    Color::RGB(255, 100, 0), // FIRE
-    Color::RGB(50, 50, 50), // SMOKE
-    Color::RGB(220, 220, 220), //STEAM
-    Color::RGB(20, 230, 140) // FLAMMABLE_GAS
+const MATERIAL_COLORS: [sdl2::pixels::Color;12] = [
+    sdl2::pixels::Color::RGB(0, 0, 0), // AIR
+    sdl2::pixels::Color::RGB(90, 90, 90), // STONE
+    sdl2::pixels::Color::RGB(150, 130, 40), // WOOD
+    sdl2::pixels::Color::RGB(250, 230, 40), // SAND
+    sdl2::pixels::Color::RGB(40, 40, 40), // COAL
+    sdl2::pixels::Color::RGB(20, 40, 230), // WATER
+    sdl2::pixels::Color::RGB(120, 70, 10), // OIL
+    sdl2::pixels::Color::RGB(255, 30, 0), // LAVA
+    sdl2::pixels::Color::RGB(255, 100, 0), // FIRE
+    sdl2::pixels::Color::RGB(50, 50, 50), // SMOKE
+    sdl2::pixels::Color::RGB(220, 220, 220), //STEAM
+    sdl2::pixels::Color::RGB(20, 230, 140) // FLAMMABLE_GAS
 ];
 
 struct Particle {
     pub should_move: bool,
     pub particle_type: u32,
-    pub sdl_rect: Rect
+    pub sdl_rect: sdl2::rect::Rect
 }
 
 /*
@@ -86,10 +81,11 @@ fn calculate_line(point_a: (i32,i32), point_b: (i32,i32)) -> std::vec::Vec<(i32,
 }
 
 fn main() {
-    // TODO: Get the settings from the user at runtime
+    // TODO: Get the settings from the user at runtime (or through command arguments)
     let grid_x_size:u32=64;
     let grid_y_size:u32=64;
     let cell_size:u32=10;
+    let fps_limit:u32=64;
 
     // The grid
     let mut grid: std::vec::Vec<std::vec::Vec<Particle>>=std::vec::Vec::new();
@@ -104,7 +100,7 @@ fn main() {
                 Particle {
                     should_move: true,
                     particle_type: AIR,
-                    sdl_rect: Rect::new((x * cell_size) as i32, (y * cell_size) as i32, cell_size, cell_size)
+                    sdl_rect: sdl2::rect::Rect::new((x * cell_size) as i32, (y * cell_size) as i32, cell_size, cell_size)
                 }
             );
 
@@ -121,7 +117,8 @@ fn main() {
     }
 
     // Misc vars
-    let mut mouse_state: MouseState;
+    let mut frame_start_time: std::time::Instant;
+    let mut mouse_state: sdl2::mouse::MouseState;
     let mut should_read_last_mouse_xy=false;
     let mut last_mouse_xy: (i32,i32)=(0,0);
 
@@ -134,11 +131,13 @@ fn main() {
 
     // Main loop
     'main_loop: loop {
+        frame_start_time=std::time::Instant::now();
+
         // Events
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } | Event::KeyDown { keycode: Some(Keycode::Q), .. } => break 'main_loop,
-                Event::KeyDown { keycode: Some(Keycode::R), .. } => {
+                sdl2::event::Event::Quit {..} | sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Escape), .. } | sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Q), .. } => break 'main_loop,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::R), .. } => {
                     for x in &mut grid {
                         for mut y in x {
                             y.particle_type=AIR;
@@ -201,7 +200,7 @@ fn main() {
         //TODO: Rewrite the entire physics system over there.
 
         // Drawing to the screen
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
+        canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
         canvas.clear();
 
         for x in &grid {
@@ -215,7 +214,7 @@ fn main() {
 
         canvas.present();
 
-        // FPS Limit | TODO: Subtract the duration of that frame
-        std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 10));
+        // FPS Limit
+        std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / fps_limit).checked_sub(frame_start_time.elapsed()).unwrap_or(std::time::Duration::new(0,0)));
     }
 }
