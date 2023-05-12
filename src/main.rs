@@ -40,7 +40,52 @@ struct Particle {
     pub sdl_rect: Rect
 }
 
-pub fn main() {
+/*
+THE FOLLOWING FUNCTION IS A RUST PORT OF MATTBATWINGS' PYTHON CODE FROM HIS REDSTONE VIDEO!
+https://youtu.be/vfPGuUDuwmo
+https://imgur.com/a/2uT7LaV
+*/
+fn calculate_line(point_a: (i32,i32), point_b: (i32,i32)) -> std::vec::Vec<(i32,i32)> {
+    let mut output: std::vec::Vec<(i32,i32)>=std::vec::Vec::new();
+
+    let bx_minus_ax = point_b.0 - point_a.0;
+    let by_minus_ay = point_b.1 - point_a.1;
+    let increment_x = bx_minus_ax.signum();
+    let increment_y = by_minus_ay.signum();
+    let difference_x = bx_minus_ax.abs();
+    let difference_y = by_minus_ay.abs();
+
+    // I'm not sure what these three variables represent, and I don't wanna waste my time on it, so I won't refactor them further.
+    let mut cmpt = difference_x.max(difference_y);
+    let inc_d = -2 * (difference_x - difference_y).abs();
+    let inc_s = 2 * difference_x.min(difference_y);
+
+    let mut error = inc_d + cmpt;
+    let mut x = point_a.0;
+    let mut y = point_a.1;
+
+    while cmpt >= 0 {
+        output.push((x,y));
+        cmpt -= 1;
+
+        if error>=0 || difference_x > difference_y {
+            x+=increment_x;
+        }
+        if error>=0 || difference_x < difference_y {
+            y+=increment_y;
+        }
+
+        if error>=0 {
+            error+=inc_d;
+        } else {
+            error+=inc_s;
+        }
+    }
+
+    return output;
+}
+
+fn main() {
     // TODO: Get the settings from the user at runtime
     let grid_x_size:u32=64;
     let grid_y_size:u32=64;
@@ -77,6 +122,8 @@ pub fn main() {
 
     // Misc vars
     let mut mouse_state: MouseState;
+    let mut should_read_last_mouse_xy=false;
+    let mut last_mouse_xy: (i32,i32)=(0,0);
 
     // SDL Vars
     let sdl_context = sdl2::init().unwrap();
@@ -91,23 +138,57 @@ pub fn main() {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } | Event::KeyDown { keycode: Some(Keycode::Q), .. } => break 'main_loop,
+                Event::KeyDown { keycode: Some(Keycode::R), .. } => {
+                    for x in &mut grid {
+                        for mut y in x {
+                            y.particle_type=AIR;
+                        }
+                    }
+                },
                 _ => {}
             }
         }
 
         mouse_state=event_pump.mouse_state();
-        if mouse_state.left() {
-            let x: usize=(mouse_state.x()/cell_size as i32) as usize;
-            let y: usize=(mouse_state.y()/cell_size as i32) as usize;
-            if x>=0 && x<=grid_x_size as usize && y>=0 && y<=grid_y_size as usize{
-                grid[x][y].particle_type=SMOKE;
+        if mouse_state.left()
+        {
+            let xy=(mouse_state.x()/cell_size as i32,mouse_state.y()/cell_size as i32);
+            let line: std::vec::Vec<(i32,i32)>;
+            if should_read_last_mouse_xy {
+                line=calculate_line((last_mouse_xy.0,last_mouse_xy.1),xy);
+            } else {
+                line=calculate_line(xy,xy);
             }
-        } else if mouse_state.right() {
-            let x: usize=(mouse_state.x()/cell_size as i32) as usize;
-            let y: usize=(mouse_state.y()/cell_size as i32) as usize;
-            if x>=0 && x<grid_x_size as usize && y>=0 && y<grid_y_size as usize{
-                grid[x][y].particle_type=AIR;
+
+            for i in line {
+                if i.0>=0 && i.0<=grid_x_size as i32 && i.1>=0 && i.1<=grid_y_size as i32 {
+                    grid[i.0 as usize][i.1 as usize].particle_type=STEAM;
+                }
             }
+
+            last_mouse_xy=(mouse_state.x()/cell_size as i32,mouse_state.y()/cell_size as i32);
+            should_read_last_mouse_xy=true;
+        }
+        else if mouse_state.right()
+        {
+            let xy=(mouse_state.x()/cell_size as i32,mouse_state.y()/cell_size as i32);
+            let line: std::vec::Vec<(i32,i32)>;
+            if should_read_last_mouse_xy {
+                line=calculate_line((last_mouse_xy.0,last_mouse_xy.1),xy);
+            } else {
+                line=calculate_line(xy,xy);
+            }
+
+            for i in line {
+                if i.0>=0 && i.0<=grid_x_size as i32 && i.1>=0 && i.1<=grid_y_size as i32 {
+                    grid[i.0 as usize][i.1 as usize].particle_type=AIR;
+                }
+            }
+
+            last_mouse_xy=(mouse_state.x()/cell_size as i32,mouse_state.y()/cell_size as i32);
+            should_read_last_mouse_xy=true;
+        } else {
+            should_read_last_mouse_xy=false;
         }
         
         // Misc stuff happening every frame
@@ -116,6 +197,8 @@ pub fn main() {
                 y.should_move=true;
             }
         }
+
+        //TODO: Rewrite the entire physics system over there.
 
         // Drawing to the screen
         canvas.set_draw_color(Color::RGB(0, 0, 0));
@@ -132,7 +215,7 @@ pub fn main() {
 
         canvas.present();
 
-        // FPS Limit
+        // FPS Limit | TODO: Subtract the duration of that frame
         std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 10));
     }
 }
