@@ -14,13 +14,13 @@ const SMOKE:u32 = 9;
 const STEAM:u32 = 10;
 const FLAMMABLE_GAS:u32 = 11;
 
-const SOLIDS:[u32;2] = [1,2];
-const POWDERS:[u32;2] = [3,4];
-const FLUIDS:[u32;3] = [5,6,7];
-const GASES:[u32;3] = [9,10,11];
-const STARTING_FIRE:[u32;2] = [8,7];
-const FLAMMABLE:[u32;4] = [2,4,6,11];
-const CAN_GO_THROUGH:[u32;4] = [0,9,10,11];
+const SOLIDS:[u32;2] = [STONE,WOOD];
+const POWDERS:[u32;2] = [SAND,COAL];
+const FLUIDS:[u32;3] = [WATER,OIL,LAVA];
+const GASES:[u32;3] = [SMOKE,STEAM,FLAMMABLE_GAS];
+const STARTING_FIRE:[u32;2] = [FIRE,LAVA];
+const FLAMMABLE:[u32;4] = [WOOD,COAL,OIL,FLAMMABLE_GAS];
+const CAN_GO_THROUGH:[u32;4] = [AIR,SMOKE,STEAM,FLAMMABLE_GAS];
 
 const MATERIAL_COLORS: [sdl2::pixels::Color;12] = [
     sdl2::pixels::Color::RGB(0, 0, 0), // AIR
@@ -127,9 +127,9 @@ fn main() {
     // Misc vars
     let mut frame_start_time: std::time::Instant;
     let mut mouse_state: sdl2::mouse::MouseState;
-    let mut should_read_last_mouse_xy=false;
-    let mut last_mouse_xy: (i32,i32)=(0,0);
-    let mut current_particle=1;
+    let mut should_read_last_mouse_xy = false;
+    let mut last_mouse_xy: (i32,i32) = (0,0);
+    let mut current_particle = 1;
 
     // SDL Vars
     let sdl_context = sdl2::init().unwrap();
@@ -140,12 +140,13 @@ fn main() {
 
     // Main loop
     'main_loop: loop {
-        frame_start_time=std::time::Instant::now();
+        frame_start_time = std::time::Instant::now();
 
         // Events
         for event in event_pump.poll_iter() {
             match event {
                 sdl2::event::Event::Quit {..} | sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Escape), .. } | sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Q), .. } => break 'main_loop,
+
                 sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::R), .. } => {
                     for x in &mut grid {
                         for mut y in x {
@@ -153,6 +154,19 @@ fn main() {
                         }
                     }
                 },
+
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Backquote), .. } => current_particle=1,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Num1), .. } => current_particle=2,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Num2), .. } => current_particle=3,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Num3), .. } => current_particle=4,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Num4), .. } => current_particle=5,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Num5), .. } => current_particle=6,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Num6), .. } => current_particle=7,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Num7), .. } => current_particle=8,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Num8), .. } => current_particle=9,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Num9), .. } => current_particle=10,
+                sdl2::event::Event::KeyDown { keycode: Some(sdl2::keyboard::Keycode::Num0), .. } => current_particle=11,
+
                 sdl2::event::Event::MouseWheel { direction, y, .. } => {
                     if direction == sdl2::mouse::MouseWheelDirection::Flipped {
                         if y<0 {
@@ -239,84 +253,83 @@ fn main() {
             loop {
                 //Powders
                 if POWDERS.contains(&grid[x][y].particle_type) && grid[x][y].should_move {
-                    /*
-                    if(j<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
-                        grid[i][j+1].type=grid[i][j].type;
-                        grid[i][j+1].toMove=false;
-                        grid[i][j].type=AIR;
+                    if y<grid_y_size as usize-1 && CAN_GO_THROUGH.contains(&grid[x][y+1].particle_type) {
+                        grid[x][y+1].particle_type = grid[x][y].particle_type;
+                        grid[x][y+1].should_move = false;
+                        grid[x][y].particle_type = AIR;
                     }
-                    else if(j<gridSize-1&&i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j+1].type)){
-                        grid[i-1][j+1].type=grid[i][j].type;
-                        grid[i-1][j+1].toMove=false;
-                        grid[i][j].type=AIR;
+                    else if y<grid_y_size as usize-1 && x>0 && CAN_GO_THROUGH.contains(&grid[x-1][y+1].particle_type) {
+                        grid[x-1][y+1].particle_type = grid[x][y].particle_type;
+                        grid[x-1][y+1].should_move = false;
+                        grid[x][y].particle_type = AIR;
                     }
-                    else if(j<gridSize-1&&i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j+1].type)){
-                        grid[i+1][j+1].type=grid[i][j].type;
-                        grid[i+1][j+1].toMove=false;
-                        grid[i][j].type=AIR;
+                    else if y<grid_y_size as usize-1 && x<grid_x_size as usize-1 && CAN_GO_THROUGH.contains(&grid[x+1][y+1].particle_type) {
+                        grid[x+1][y+1].particle_type = grid[x][y].particle_type;
+                        grid[x+1][y+1].should_move = false;
+                        grid[x][y].particle_type = AIR;
                     }
-                    */
                 }
                 //Fluids
                 else if FLUIDS.contains(&grid[x][y].particle_type) && grid[x][y].should_move {
-                    /*
-                    if(j<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
-                        grid[i][j+1].type=grid[i][j].type;
-                        grid[i][j+1].toMove=false;
-                        grid[i][j].type=AIR;
+                    if y<grid_y_size as usize-1 && CAN_GO_THROUGH.contains(&grid[x][y+1].particle_type) {
+                        grid[x][y+1].particle_type = grid[x][y].particle_type;
+                        grid[x][y+1].should_move = false;
+                        grid[x][y].particle_type = AIR;
                     }
-                    else if(j<gridSize-1&&i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j+1].type)){
-                        grid[i-1][j+1].type=grid[i][j].type;
-                        grid[i-1][j+1].toMove=false;
-                        grid[i][j].type=AIR;
+                    else if y<grid_y_size as usize-1 && x>0 && CAN_GO_THROUGH.contains(&grid[x-1][y+1].particle_type) {
+                        grid[x-1][y+1].particle_type = grid[x][y].particle_type;
+                        grid[x-1][y+1].should_move = false;
+                        grid[x][y].particle_type = AIR;
                     }
-                    else if(j<gridSize-1&&i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j+1].type)){
-                        grid[i+1][j+1].type=grid[i][j].type;
-                        grid[i+1][j+1].toMove=false;
-                        grid[i][j].type=AIR;
+                    else if y<grid_y_size as usize-1 && x<grid_x_size as usize-1 && CAN_GO_THROUGH.contains(&grid[x+1][y+1].particle_type) {
+                        grid[x+1][y+1].particle_type = grid[x][y].particle_type;
+                        grid[x+1][y+1].should_move = false;
+                        grid[x][y].particle_type = AIR;
                     }
-                    else if(isInThatList(FLUIDS,grid[i][j+1].type)){
-                        if(i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j].type)){
-                            grid[i-1][j].type=grid[i][j].type;
-                            grid[i-1][j].toMove=false;
-                            grid[i][j].type=AIR;
+                    else if FLUIDS.contains(&grid[x][y+1].particle_type) {
+                        if x>0 && CAN_GO_THROUGH.contains(&grid[x-1][y].particle_type) {
+                            grid[x-1][y].particle_type = grid[x][y].particle_type;
+                            grid[x-1][y].should_move = false;
+                            grid[x][y].particle_type = AIR;
                         }
-                        else if(i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j].type)){
-                            grid[i+1][j].type=grid[i][j].type;
-                            grid[i+1][j].toMove=false;
-                            grid[i][j].type=AIR;
+                        else if x<grid_x_size as usize-1 && CAN_GO_THROUGH.contains(&grid[x+1][y].particle_type) {
+                            grid[x+1][y].particle_type = grid[x][y].particle_type;
+                            grid[x+1][y].should_move = false;
+                            grid[x][y].particle_type = AIR;
                         }
                     }
-                    */
                 }
                 //Gases
                 else if GASES.contains(&grid[x][y].particle_type) && grid[x][y].should_move {
-                    /*
-                    if(j>0&&grid[i][j-1].type==AIR){
-                        grid[i][j-1].type=grid[i][j].type;
-                        grid[i][j-1].toMove=false;
-                        grid[i][j].type=AIR;
-                    }else if(j>0&&i>0&&grid[i-1][j-1].type==AIR){
-                        grid[i-1][j-1].type=grid[i][j].type;
-                        grid[i-1][j-1].toMove=false;
-                        grid[i][j].type=AIR;
-                    }else if(j>0&&i<gridSize-1&&grid[i+1][j-1].type==AIR){
-                        grid[i+1][j-1].type=grid[i][j].type;
-                        grid[i+1][j-1].toMove=false;
-                        grid[i][j].type=AIR;
-                    }else if(isInThatList(GASES,grid[i][j-1].type)){
-                        if(i>0&&grid[i-1][j].type==AIR){
-                            grid[i-1][j].type=grid[i][j].type;
-                            grid[i-1][j].toMove=false;
-                            grid[i][j].type=AIR;
-                        }else if(i<gridSize-1&&grid[i+1][j].type==AIR){
-                            grid[i+1][j].type=grid[i][j].type;
-                            grid[i+1][j].toMove=false;
-                            grid[i][j].type=AIR;
+                    if y>0 && grid[x][y-1].particle_type == AIR {
+                        grid[x][y-1].particle_type = grid[x][y].particle_type;
+                        grid[x][y-1].should_move = false;
+                        grid[x][y].particle_type = AIR;
+                    }
+                    else if y>0 && x>0 && grid[x-1][y-1].particle_type == AIR {
+                        grid[x-1][y-1].particle_type = grid[x][y].particle_type;
+                        grid[x-1][y-1].should_move = false;
+                        grid[x][y].particle_type = AIR;
+                    }
+                    else if y>0 && x<grid_x_size as usize-1 && grid[x+1][y-1].particle_type == AIR {
+                        grid[x+1][y-1].particle_type = grid[x][y].particle_type;
+                        grid[x+1][y-1].should_move = false;
+                        grid[x][y].particle_type = AIR;
+                    }
+                    else if GASES.contains(&grid[x][y-1].particle_type) {
+                        if x>0 && grid[x-1][y].particle_type == AIR {
+                            grid[x-1][y].particle_type = grid[x][y].particle_type;
+                            grid[x-1][y].should_move = false;
+                            grid[x][y].particle_type = AIR;
+                        }
+                        else if x<grid_x_size as usize-1 && grid[x+1][y].particle_type == AIR {
+                            grid[x+1][y].particle_type = grid[x][y].particle_type;
+                            grid[x+1][y].should_move = false;
+                            grid[x][y].particle_type = AIR;
                         }
                     }
-                    */
                 }
+                // TODO here: Fire, burning and evaporating physics here.
 
                 y+=1;
                 if y>grid_y_size as usize {
