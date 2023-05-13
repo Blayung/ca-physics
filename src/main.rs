@@ -20,7 +20,7 @@ const FLUIDS:[u32;3] = [WATER,OIL,LAVA];
 const GASES:[u32;3] = [SMOKE,STEAM,FLAMMABLE_GAS];
 const STARTING_FIRE:[u32;2] = [FIRE,LAVA];
 const FLAMMABLE:[u32;4] = [WOOD,COAL,OIL,FLAMMABLE_GAS];
-const CAN_GO_THROUGH:[u32;4] = [AIR,SMOKE,STEAM,FLAMMABLE_GAS];
+const CAN_GO_THROUGH:[u32;5] = [AIR,FIRE,SMOKE,STEAM,FLAMMABLE_GAS];
 
 const MATERIAL_COLORS: [sdl2::pixels::Color;12] = [
     sdl2::pixels::Color::RGB(0, 0, 0), // AIR
@@ -89,7 +89,6 @@ fn calculate_line(point_a: (i32,i32), point_b: (i32,i32)) -> std::vec::Vec<(i32,
 }
 
 fn main() {
-    // TODO: Get the settings from the user at runtime (or through command arguments)
     let grid_x_size:u32=64;
     let grid_y_size:u32=64;
     let cell_size:u32=10;
@@ -316,20 +315,21 @@ fn main() {
                         grid[x+1][y-1].should_move = false;
                         grid[x][y].particle_type = AIR;
                     }
-                    else if GASES.contains(&grid[x][y-1].particle_type) {
-                        if x>0 && grid[x-1][y].particle_type == AIR {
-                            grid[x-1][y].particle_type = grid[x][y].particle_type;
-                            grid[x-1][y].should_move = false;
-                            grid[x][y].particle_type = AIR;
-                        }
-                        else if x<grid_x_size as usize-1 && grid[x+1][y].particle_type == AIR {
-                            grid[x+1][y].particle_type = grid[x][y].particle_type;
-                            grid[x+1][y].should_move = false;
-                            grid[x][y].particle_type = AIR;
+                    else if y>0 {
+                        if GASES.contains(&grid[x][y-1].particle_type) {
+                            if x>0 && grid[x-1][y].particle_type == AIR {
+                                grid[x-1][y].particle_type = grid[x][y].particle_type;
+                                grid[x-1][y].should_move = false;
+                                grid[x][y].particle_type = AIR;
+                            }
+                            else if x<grid_x_size as usize-1 && grid[x+1][y].particle_type == AIR {
+                                grid[x+1][y].particle_type = grid[x][y].particle_type;
+                                grid[x+1][y].should_move = false;
+                                grid[x][y].particle_type = AIR;
+                            }
                         }
                     }
                 }
-                // TODO here: Fire, burning and evaporating physics here.
 
                 y+=1;
                 if y>grid_y_size as usize {
