@@ -238,7 +238,7 @@ fn main() {
             let mut y:usize=0;
             loop {
                 //Powders
-                if POWDERS.contains(grid[x][y].particle_type) && grid[x][y].toMove {
+                if POWDERS.contains(&grid[x][y].particle_type) && grid[x][y].should_move {
                     /*
                     if(j<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
                         grid[i][j+1].type=grid[i][j].type;
@@ -258,7 +258,7 @@ fn main() {
                     */
                 }
                 //Fluids
-                else if FLUIDS.contains(grid[x][y].particle_type) && grid[x][y].toMove {
+                else if FLUIDS.contains(&grid[x][y].particle_type) && grid[x][y].should_move {
                     /*
                     if(j<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
                         grid[i][j+1].type=grid[i][j].type;
@@ -290,7 +290,7 @@ fn main() {
                     */
                 }
                 //Gases
-                else if GASES.contains(grid[x][y].particle_type) && grid[x][y].toMove {
+                else if GASES.contains(&grid[x][y].particle_type) && grid[x][y].should_move {
                     /*
                     if(j>0&&grid[i][j-1].type==AIR){
                         grid[i][j-1].type=grid[i][j].type;
@@ -319,12 +319,12 @@ fn main() {
                 }
 
                 y+=1;
-                if y>grid_y_size {
+                if y>grid_y_size as usize {
                     break;
                 }
             }
             x+=1;
-            if x>grid_x_size {
+            if x>grid_x_size as usize {
                 break;
             }
         }
