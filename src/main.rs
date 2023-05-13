@@ -14,6 +14,14 @@ const SMOKE:u32 = 9;
 const STEAM:u32 = 10;
 const FLAMMABLE_GAS:u32 = 11;
 
+const SOLIDS:[u32;2] = [1,2];
+const POWDERS:[u32;2] = [3,4];
+const FLUIDS:[u32;3] = [5,6,7];
+const GASES:[u32;3] = [9,10,11];
+const STARTING_FIRE:[u32;2] = [8,7];
+const FLAMMABLE:[u32;4] = [2,4,6,11];
+const CAN_GO_THROUGH:[u32;4] = [0,9,10,11];
+
 const MATERIAL_COLORS: [sdl2::pixels::Color;12] = [
     sdl2::pixels::Color::RGB(0, 0, 0), // AIR
     sdl2::pixels::Color::RGB(90, 90, 90), // STONE
@@ -218,10 +226,106 @@ fn main() {
             should_read_last_mouse_xy=false;
         }
         
-        // Misc stuff happening every frame
+        // Physics
         for x in &mut grid {
             for mut y in x {
                 y.should_move=true;
+            }
+        }
+
+        let mut x:usize=0;
+        loop {
+            let mut y:usize=0;
+            loop {
+                //Powders
+                if POWDERS.contains(grid[x][y].particle_type) && grid[x][y].toMove {
+                    /*
+                    if(j<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
+                        grid[i][j+1].type=grid[i][j].type;
+                        grid[i][j+1].toMove=false;
+                        grid[i][j].type=AIR;
+                    }
+                    else if(j<gridSize-1&&i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j+1].type)){
+                        grid[i-1][j+1].type=grid[i][j].type;
+                        grid[i-1][j+1].toMove=false;
+                        grid[i][j].type=AIR;
+                    }
+                    else if(j<gridSize-1&&i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j+1].type)){
+                        grid[i+1][j+1].type=grid[i][j].type;
+                        grid[i+1][j+1].toMove=false;
+                        grid[i][j].type=AIR;
+                    }
+                    */
+                }
+                //Fluids
+                else if FLUIDS.contains(grid[x][y].particle_type) && grid[x][y].toMove {
+                    /*
+                    if(j<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i][j+1].type)){
+                        grid[i][j+1].type=grid[i][j].type;
+                        grid[i][j+1].toMove=false;
+                        grid[i][j].type=AIR;
+                    }
+                    else if(j<gridSize-1&&i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j+1].type)){
+                        grid[i-1][j+1].type=grid[i][j].type;
+                        grid[i-1][j+1].toMove=false;
+                        grid[i][j].type=AIR;
+                    }
+                    else if(j<gridSize-1&&i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j+1].type)){
+                        grid[i+1][j+1].type=grid[i][j].type;
+                        grid[i+1][j+1].toMove=false;
+                        grid[i][j].type=AIR;
+                    }
+                    else if(isInThatList(FLUIDS,grid[i][j+1].type)){
+                        if(i>0&&isInThatList(CAN_GO_THROUGH,grid[i-1][j].type)){
+                            grid[i-1][j].type=grid[i][j].type;
+                            grid[i-1][j].toMove=false;
+                            grid[i][j].type=AIR;
+                        }
+                        else if(i<gridSize-1&&isInThatList(CAN_GO_THROUGH,grid[i+1][j].type)){
+                            grid[i+1][j].type=grid[i][j].type;
+                            grid[i+1][j].toMove=false;
+                            grid[i][j].type=AIR;
+                        }
+                    }
+                    */
+                }
+                //Gases
+                else if GASES.contains(grid[x][y].particle_type) && grid[x][y].toMove {
+                    /*
+                    if(j>0&&grid[i][j-1].type==AIR){
+                        grid[i][j-1].type=grid[i][j].type;
+                        grid[i][j-1].toMove=false;
+                        grid[i][j].type=AIR;
+                    }else if(j>0&&i>0&&grid[i-1][j-1].type==AIR){
+                        grid[i-1][j-1].type=grid[i][j].type;
+                        grid[i-1][j-1].toMove=false;
+                        grid[i][j].type=AIR;
+                    }else if(j>0&&i<gridSize-1&&grid[i+1][j-1].type==AIR){
+                        grid[i+1][j-1].type=grid[i][j].type;
+                        grid[i+1][j-1].toMove=false;
+                        grid[i][j].type=AIR;
+                    }else if(isInThatList(GASES,grid[i][j-1].type)){
+                        if(i>0&&grid[i-1][j].type==AIR){
+                            grid[i-1][j].type=grid[i][j].type;
+                            grid[i-1][j].toMove=false;
+                            grid[i][j].type=AIR;
+                        }else if(i<gridSize-1&&grid[i+1][j].type==AIR){
+                            grid[i+1][j].type=grid[i][j].type;
+                            grid[i+1][j].toMove=false;
+                            grid[i][j].type=AIR;
+                        }
+                    }
+                    */
+                }
+
+                y+=1;
+                if y>grid_y_size {
+                    break;
+                }
+            }
+            x+=1;
+            if x>grid_x_size {
+                break;
             }
         }
 
