@@ -2,6 +2,8 @@
 name = "ca-physics"
 version = "0.0.0"
 authors = ["Blay"]
+license = "GPL-3.0-only"
+repository = "https://github.com/Blayung/kum.io"
 edition = "2021"
 
 [dependencies]
