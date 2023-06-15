@@ -1,5 +1,3 @@
-extern crate sdl2;
-
 // Materials
 const AIR:u32 = 0;
 const STONE:u32 = 1;
@@ -22,6 +20,21 @@ const STARTING_FIRE:[u32;2] = [FIRE,LAVA];
 const FLAMMABLE:[u32;4] = [WOOD,COAL,OIL,FLAMMABLE_GAS];
 const CAN_GO_THROUGH:[u32;5] = [AIR,FIRE,SMOKE,STEAM,FLAMMABLE_GAS];
 
+const MATERIAL_DENSITY: [i32;12] = [
+    0, // AIR
+    5, // STONE
+    5, // WOOD
+    2, // SAND
+    4, // COAL
+    1, // WATER
+    2, // OIL
+    3, // LAVA
+    5, // FIRE
+    2, // SMOKE
+    1, // STEAM
+    3 // FLAMMABLE_GAS
+];
+
 const MATERIAL_COLORS: [sdl2::pixels::Color;12] = [
     sdl2::pixels::Color::RGB(0, 0, 0), // AIR
     sdl2::pixels::Color::RGB(90, 90, 90), // STONE
@@ -37,6 +50,7 @@ const MATERIAL_COLORS: [sdl2::pixels::Color;12] = [
     sdl2::pixels::Color::RGB(20, 230, 140) // FLAMMABLE_GAS
 ];
 
+#[derive(Copy, Clone)]
 struct Particle {
     pub should_move: bool,
     pub particle_type: u32,
@@ -86,6 +100,12 @@ fn calculate_line(point_a: (i32,i32), point_b: (i32,i32)) -> std::vec::Vec<(i32,
     }
 
     return output;
+}
+
+fn swap_grid_values(vector:&mut std::vec::Vec<std::vec::Vec<Particle>>, element_1_x:usize, element_1_y:usize, element_2_x:usize, element_2_y:usize){
+    let buffer = vector[element_1_x][element_1_y];
+    vector[element_1_x][element_1_y] = vector[element_2_x][element_2_y];
+    vector[element_2_x][element_2_y] = buffer;
 }
 
 fn main() {
@@ -253,6 +273,7 @@ fn main() {
                 //Powders
                 if POWDERS.contains(&grid[x][y].particle_type) && grid[x][y].should_move {
                     if y<grid_y_size as usize-1 && CAN_GO_THROUGH.contains(&grid[x][y+1].particle_type) {
+                        swap_grid_values(&mut grid,64,64,64,0);
                         grid[x][y+1].particle_type = grid[x][y].particle_type;
                         grid[x][y+1].should_move = false;
                         grid[x][y].particle_type = AIR;
