@@ -1,4 +1,5 @@
 # Cellular Automaton Physics Project
+# DISLAIMER: I'M CURRENTLY REWRITING THIS PROJECT IN RUST, THE C++ VERSION WON'T GET ANY MORE SUPPORT. YOU CAN CHECK OUT THE RUST DEVELOPMENT BRANCH OVER [HERE](https://github.com/Blayung/ca-physics/tree/rust-dev).
 ## Features
 * Simple 2d physics
     * Gases physics
